@@ -1,10 +1,10 @@
 {
     "queue_size": 10000,
     "HOST": "0.0.0.0",
-    "PORT": 8003,
+    "PORT": 6103,
     "MAX_CONN": 2000,
     "MAX_DATA_SIZE": 4096,
-    "LOG_PATH": "/full/path/to/save/log",
+    "LOG_PATH": "tmp",
     "applications": {
         "1001": {"name": "chatbot", "level": 1},
         "1002": {"name": "crazybot", "level": 1},
