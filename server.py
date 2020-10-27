@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import socket, select ,json ,datetime ,os, sys ,Queue ,signal
-reload(sys)
-sys.setdefaultencoding("utf-8")
+import socket
+import select
+import json
+import datetime
+import os
+import sys
+import Queue
+import signal
+
 
 class V:
     config_file = "config.json"
@@ -13,13 +19,14 @@ class V:
     log_path = "LOG_PATH"
     applications = "applications"
     queue_size = "queue_size"
-    logfile = "log_file.log" # logserver的日志存放
+    logfile = "log_file.log"  # logserver的日志存放
     name = "V.name"
 
     error = "error"
     warning = "warning"
     info = "info"
     debug = "debug"
+
 
 class Server:
     def __init__(self, **kargs):
@@ -32,14 +39,15 @@ class Server:
         self._max_data_size = config.get(V.max_data_size)
         self.path = config.get(V.log_path)
         if not os.path.exists(self.path):
-            print "%s not exists" % (self.path)
             sys.exit()
         self.applications = config.get(V.applications)
         self.lvs = [V.error, V.warning, V.info, V.debug]
         self.fds = {}
         self._logQueue = Queue.Queue(config.get(V.queue_size))
+
     def __setitem__(self, k, v):
         self.__dict__[k] = v
+
     def __getitem__(self, k):
         return self.__dict__.get(k, None)
 
@@ -65,12 +73,12 @@ class Server:
                     _events = _epoll.poll(1)
                     self.log()
                     for fileno, event in _events:
-                        if fileno == _server_sock.fileno(): # _server_sock绑定的事件到达
+                        if fileno == _server_sock.fileno():  # _server_sock绑定的事件到达
                             _conn, _addr = _server_sock.accept()
                             _conn.setblocking(0)
                             _epoll.register(_conn.fileno(), select.EPOLLIN)
                             _connections.update({_conn.fileno(): [_conn, _addr]})
-                        elif event & select.EPOLLIN: # 文件描述符可读
+                        elif event & select.EPOLLIN:  # 文件描述符可读
                             _data = _connections[fileno][0].recv(self._max_data_size)
                             if len(_data) <= 0:
                                 _epoll.modify(fileno, select.EPOLLOUT)
@@ -79,10 +87,10 @@ class Server:
 
                             for d in _data:
                                 self._logQueue.put(d, block = False)
-                        elif event & select.EPOLLOUT: # 文件描述符可写
+                        elif event & select.EPOLLOUT:  # 文件描述符可写
                             _epoll.modify(fileno, 0)
                             _connections[fileno][0].shutdown(socket.SHUT_RDWR)
-                        elif event & select.EPOLLHUP: # 文件描述符完成工作
+                        elif event & select.EPOLLHUP:  # 文件描述符完成工作
                             # TODO: 出现异常文件描述符没有被关闭
                             _epoll.unregister(fileno)
                             _connections[fileno][0].close()
@@ -134,7 +142,7 @@ class Server:
 
     def log(self):
         # [0, 1001, "2017-01-01", "192.168.10.218", "wtf"]
-        for x in xrange(1, 10):
+        for x in range(1, 10):
             if not self._logQueue.empty():
                 data = self._logQueue.get(block = False)
                 level = self.lvs[data[0]]
@@ -143,6 +151,7 @@ class Server:
                 if sys.stdout.isatty():
                     print("[%s][%s][%s]: %s" % (level, data[2], data[3], data[4]))
                 fd.write("[%s][%s][%s]: %s\n" % (level, data[2], data[3], data[4]))
+
 
 if __name__ == "__main__":
     pid = os.getpid()
