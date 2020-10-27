@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import time
 import socket
 import select
 import json
@@ -72,14 +73,17 @@ class Server:
             self.server.close()
 
     def start(self):
+        print("start server on port: {}".format(self.config.PORT))
         while True:
+            print("waiting for connection ... ")
+            time.sleep(1)
             events = self.epoll.poll(1)
             for fileno, event in events:
                 if fileno == self.server.fileno():
                     conn, addr = self.server.accept()
                     conn.setblocking(0)
                     self.epoll.register(conn.fileno(), select.EPOLLIN)
-                    self.connections.update({fileno: [conn, addr]})
+                    self.connections.update({conn.fileno(): [conn, addr]})
                 elif event & select.EPOLLIN:
                     data = self.connections[fileno][0].recv(self.config.MAX_DATA_SIZE)
                     if len(data) <= 0:
