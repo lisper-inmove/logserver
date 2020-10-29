@@ -11,24 +11,6 @@ import signal
 import dotmap
 
 
-class V:
-    config_file = "config.json"
-    host = "HOST"
-    port = "PORT"
-    max_conn = "MAX_CONN"
-    max_data_size = "MAX_DATA_SIZE"
-    log_path = "LOG_PATH"
-    applications = "applications"
-    queue_size = "queue_size"
-    logfile = "log_file.log"  # logserver的日志存放
-    name = "V.name"
-
-    error = "error"
-    warning = "warning"
-    info = "info"
-    debug = "debug"
-
-
 class Server:
     def __init__(self, **kargs):
 
@@ -67,7 +49,8 @@ class Server:
     def try_start(self):
         try:
             self.start()
-        except Exception:
+        except Exception as ex:
+            print("try_start exception: {}".format(ex))
             self.epoll.unregister(self.server.fileno())
             self.epoll.close()
             self.server.close()
@@ -84,20 +67,24 @@ class Server:
                     conn.setblocking(0)
                     self.epoll.register(conn.fileno(), select.EPOLLIN)
                     self.connections.update({conn.fileno(): [conn, addr]})
+                    print("new connection comming...")
                 elif event & select.EPOLLIN:
                     data = self.connections[fileno][0].recv(self.config.MAX_DATA_SIZE)
-                    if len(data) <= 0:
-                        self.epoll.modify(fileno, select.EPOLLOUT)
-                    self.epoll.modify(fileno, select.EPOLLOUT)
-                    print("get data: {}".format(data))
+                    self.deal_with_input(data, fileno)
+                    print("read data from : {}".format(fileno))
                 elif event & select.EPOLLOUT:
                     self.epoll.modify(fileno, 0)
                     self.connections[fileno][0].shutdown(socket.SHUT_RDWR)
+                    print("123")
                 elif event & select.EPOLLHUP:
                     self.epoll.unregister(fileno)
                     self.connections[fileno][0].close()
                     del self.connections[fileno]
+                    print("epollhup")
 
+    def deal_with_input(self, data, fileno):
+        self.epoll.modify(fileno, select.EPOLLOUT)
+        print(data)
 
 if __name__ == "__main__":
     pid = os.getpid()
