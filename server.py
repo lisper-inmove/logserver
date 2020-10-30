@@ -9,7 +9,9 @@ import os
 import sys
 import signal
 import dotmap
+import logging
 
+from file_logger import FileLogger
 
 class Server:
     def __init__(self, **kargs):
@@ -20,6 +22,7 @@ class Server:
         self.set_signal()
         self.create_server()
         self.create_epoll()
+        self.logger = FileLogger("LogServer").create()
 
     def init_config(self, config_path=None):
         current_dir = os.path.curdir
@@ -30,8 +33,6 @@ class Server:
             self.config = dotmap.DotMap(config)
 
     def set_signal(self):
-        # signal.signal(signal.SIGUSR1, self.__reload_config)
-        # signal.signal(signal.SIGUSR2, self.__jeter_log)
         pass
 
     def create_server(self):
@@ -56,9 +57,8 @@ class Server:
             self.server.close()
 
     def start(self):
-        print("start server on port: {}".format(self.config.PORT))
+        self.logger.info("start server on port: {}".format(self.config.PORT))
         while True:
-            print("waiting for connection ... ")
             time.sleep(1)
             events = self.epoll.poll(1)
             for fileno, event in events:
@@ -67,20 +67,16 @@ class Server:
                     conn.setblocking(0)
                     self.epoll.register(conn.fileno(), select.EPOLLIN)
                     self.connections.update({conn.fileno(): [conn, addr]})
-                    print("new connection comming...")
                 elif event & select.EPOLLIN:
                     data = self.connections[fileno][0].recv(self.config.MAX_DATA_SIZE)
                     self.deal_with_input(data, fileno)
-                    print("read data from : {}".format(fileno))
                 elif event & select.EPOLLOUT:
                     self.epoll.modify(fileno, 0)
                     self.connections[fileno][0].shutdown(socket.SHUT_RDWR)
-                    print("123")
                 elif event & select.EPOLLHUP:
                     self.epoll.unregister(fileno)
                     self.connections[fileno][0].close()
                     del self.connections[fileno]
-                    print("epollhup")
 
     def deal_with_input(self, data, fileno):
         self.epoll.modify(fileno, select.EPOLLOUT)
