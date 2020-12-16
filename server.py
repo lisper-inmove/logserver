@@ -7,24 +7,6 @@ import os
 import dotmap
 
 
-class V:
-    config_file = "config.json"
-    host = "HOST"
-    port = "PORT"
-    max_conn = "MAX_CONN"
-    max_data_size = "MAX_DATA_SIZE"
-    log_path = "LOG_PATH"
-    applications = "applications"
-    queue_size = "queue_size"
-    logfile = "log_file.log"  # logserver的日志存放
-    name = "V.name"
-
-    error = "error"
-    warning = "warning"
-    info = "info"
-    debug = "debug"
-
-
 class Server:
     def __init__(self, **kargs):
 
