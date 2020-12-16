@@ -3,10 +3,7 @@
 import socket
 import select
 import json
-import datetime
 import os
-import sys
-import signal
 import dotmap
 
 
@@ -34,7 +31,6 @@ class Server:
         config_path = kargs.get("config_path")
         self.connections = {}
         self.init_config(config_path)
-        self.set_signal()
         self.create_server()
         self.create_epoll()
 
@@ -45,11 +41,6 @@ class Server:
         with open(config_path) as f:
             config = json.loads(f.read())
             self.config = dotmap.DotMap(config)
-
-    def set_signal(self):
-        # signal.signal(signal.SIGUSR1, self.__reload_config)
-        # signal.signal(signal.SIGUSR2, self.__jeter_log)
-        pass
 
     def create_server(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -62,14 +53,6 @@ class Server:
     def create_epoll(self):
         self.epoll = select.epoll()
         self.epoll.register(self.server.fileno(), select.EPOLLIN)
-
-    def try_start(self):
-        try:
-            self.start()
-        except Exception:
-            self.epoll.unregister(self.server.fileno())
-            self.epoll.close()
-            self.server.close()
 
     def start(self):
         while True:
@@ -97,6 +80,7 @@ class Server:
 
 if __name__ == "__main__":
     pid = os.getpid()
-    with open("pid.log", "w") as f:
+    with open("server.pid", "w") as f:
         f.write(str(pid))
-    Server().try_start()
+    server = Server()
+    server.start()
