@@ -1,4 +1,0 @@
-1. kill -SIGUSR1 pid: 重新加载配置文件(config.json)
-2. kill -SIGUSR2 pid: 清空日志队列
-3. 日志格式为:
-    [level, appid, date, ip, string-content]

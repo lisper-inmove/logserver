@@ -1,9 +1,11 @@
 {
     "QUEUE_SIZE": 10000,
-    "HOST": "0.0.0.0",
+    "HOST": "127.0.0.1",
+    "HTTP_HOST": "127.0.0.1",
     "PORT": 6103,
-    "MAX_CONN": 2000,
-    "MAX_DATA_SIZE": 4096,
-    "applications": {
-    }
+    "HTTP_PORT": 7103,
+    "MAX_CONN": 4096,
+    "MAX_DATA_SIZE": 409600,
+    "BYTE_ORDER": "<",
+    "PROTO_LENGTH": 4
 }
